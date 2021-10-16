@@ -1,0 +1,171 @@
+<html lang="en">
+<head>
+    <title>Sudoku SAT Solver</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            font-family: Calibri, sans-serif;
+        }
+
+        colgroup, tbody {
+            border: solid medium;
+        }
+
+        col {
+            width: 20px;
+        }
+
+        td {
+            border: solid thin;
+            height: 1.4em;
+            width: 1.4em;
+            text-align: center;
+            padding: 0;
+        }
+
+        label div {
+            width: 200px;
+            display: inline-block;
+        }
+
+        label input, label select {
+            width: 200px;
+        }
+
+        .cell {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+        }
+
+        .center {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%);
+        }
+
+        #sudokuTable, #sudokuResultTable, #resultMetric {
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+
+</head>
+<body>
+<div style="height: 50px">
+    <div class="center">
+        <label>
+            <div class="label">Grid size</div>
+            <input id="gridSize" type="number">
+        </label>
+        <button type="submit" onclick="submit()">Submit</button>
+    </div>
+</div>
+
+<div id="sudoku">
+    <table id="sudokuTable"></table>
+</div>
+
+<div style="display: none; margin-top: 30px; height: 50px" id="solveDiv">
+    <div class="center">
+        <label>
+            <div class="label">Encoding algorithm</div>
+            <select id="modeSelect">
+                <option value="BINOMIAL">Binomial Encoding</option>
+                <option value="SEQUENTIAL">Sequential Encounter Encoding</option>
+            </select>
+        </label>
+        <button type="submit" onclick="solve()">Solve</button>
+    </div>
+</div>
+
+<div id="sudokuResult" style="display: none">
+    <div style="height: 50px">
+        <h3 class="center">Result:</h3>
+    </div>
+    <table id="sudokuResultTable"></table>
+
+    <table id="resultMetric" style="margin-top: 50px; width: 500px">
+        <tr><td>Satisfiable:</td><td><div id="satisfiable"></div></td></tr>
+        <tr><td>Variables:</td><td><div id="numberOfVariable"></div></td></tr>
+        <tr><td>Clauses:</td><td><div id="numberOfClause"></div></td></tr>
+        <tr><td>Clauses with clues:</td><td><div id="numberOfClauseTotal"></div></td></tr>
+        <tr><td>Execution time:</td><td><div id="executionTime"></div></td></tr>
+    </table>
+</div>
+
+</body>
+</html>
+
+<script>
+    const solveDiv = document.getElementById('solveDiv');
+    const table = document.getElementById('sudokuTable');
+    const tableResult = document.getElementById('sudokuResultTable');
+
+    const modeSelect = document.getElementById('modeSelect')
+    var blockSize;
+    var rows = [];
+
+    function buildSudoku(blockSize, target, data) {
+        withData = !!data
+        target.innerHTML = '';
+        for (let i = 0; i < blockSize; i++) {
+            const colgroup = document.createElement('colgroup');
+            for (let j = 0; j < blockSize; j++) {
+                colgroup.appendChild(document.createElement('col'));
+            }
+            target.appendChild(colgroup);
+        }
+        for (let i = 0; i < blockSize; i++) {
+            const tbody = document.createElement('tbody');
+            for (let i = 0; i < blockSize; i++) {
+                const tr = document.createElement('tr');
+                let row = [];
+                rows.push(row);
+                tbody.appendChild(tr);
+                for (let j = 0; j < blockSize * blockSize; j++) {
+                    const td = document.createElement('td');
+                    const input = document.createElement('input')
+                    input.className = "cell";
+                    if (withData) input.value = data[i][j]
+                    tr.appendChild(td);
+                    td.appendChild(input);
+                    row.push(input)
+                }
+            }
+            target.appendChild(tbody);
+        }
+        solveDiv.style.display = 'block';
+    }
+
+    function submit() {
+        blockSize = document.getElementById("gridSize").value;
+        buildSudoku(blockSize, table);
+    }
+
+    function solve() {
+        const sudoku = rows.map(row => row.map(input => input.value));
+        fetch("http://localhost:7777/solve", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    blockSize: blockSize,
+                    mode: modeSelect.value,
+                    data: sudoku
+                })
+            }
+        ).then(response => response.json())
+            .then(data => {
+                buildSudoku(blockSize, tableResult, data['result']);
+                document.getElementById('satisfiable').innerText = `${data['satisfiable']}`
+                document.getElementById('numberOfVariable').innerText = `${data['numberOfVariable']}`
+                document.getElementById('numberOfClause').innerText = `${data['numberOfClause']}`
+                document.getElementById('numberOfClauseTotal').innerText = `${data['numberOfClauseTotal']}`
+                document.getElementById('executionTime').innerText = `${data['timeInSecond']}s`
+                document.getElementById('sudokuResult').style.display = 'block';
+            })
+    }
+</script>
