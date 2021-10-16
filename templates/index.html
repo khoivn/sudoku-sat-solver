@@ -146,7 +146,7 @@
 
     function solve() {
         const sudoku = rows.map(row => row.map(input => input.value));
-        fetch("http://localhost:7777/solve", {
+        fetch("solve", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
