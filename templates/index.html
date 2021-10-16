@@ -87,11 +87,36 @@
     <table id="sudokuResultTable"></table>
 
     <table id="resultMetric" style="margin-top: 50px; width: 500px">
-        <tr><td>Satisfiable:</td><td><div id="satisfiable"></div></td></tr>
-        <tr><td>Variables:</td><td><div id="numberOfVariable"></div></td></tr>
-        <tr><td>Clauses:</td><td><div id="numberOfClause"></div></td></tr>
-        <tr><td>Clauses with clues:</td><td><div id="numberOfClauseTotal"></div></td></tr>
-        <tr><td>Execution time:</td><td><div id="executionTime"></div></td></tr>
+        <tr>
+            <td>Satisfiable:</td>
+            <td>
+                <div id="satisfiable"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Variables:</td>
+            <td>
+                <div id="numberOfVariable"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Clauses:</td>
+            <td>
+                <div id="numberOfClause"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Clauses with clues:</td>
+            <td>
+                <div id="numberOfClauseTotal"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Execution time:</td>
+            <td>
+                <div id="executionTime"></div>
+            </td>
+        </tr>
     </table>
 </div>
 
@@ -108,7 +133,8 @@
     var rows = [];
 
     function buildSudoku(blockSize, target, data) {
-        withData = !!data
+        withData = !!data;
+        if (!withData) rows = [];
         target.innerHTML = '';
         for (let i = 0; i < blockSize; i++) {
             const colgroup = document.createElement('colgroup');
@@ -119,16 +145,16 @@
         }
         for (let i = 0; i < blockSize; i++) {
             const tbody = document.createElement('tbody');
-            for (let i = 0; i < blockSize; i++) {
+            for (let ii = 0; ii < blockSize; ii++) {
                 const tr = document.createElement('tr');
                 let row = [];
-                rows.push(row);
+                if (!withData) rows.push(row);
                 tbody.appendChild(tr);
                 for (let j = 0; j < blockSize * blockSize; j++) {
                     const td = document.createElement('td');
                     const input = document.createElement('input')
                     input.className = "cell";
-                    if (withData) input.value = data[i][j]
+                    if (withData) input.value = data[i * blockSize + ii][j]
                     tr.appendChild(td);
                     td.appendChild(input);
                     row.push(input)

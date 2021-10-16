@@ -8,4 +8,5 @@ if __name__ == '__main__':
 
     solver = SudokuSatSolver(3, clues, SudokuSatSolver.EncodingMode.BINOMIAL)
     result = solver.solve()
-    print(result)
+    for row in result['result']:
+        print(row)
