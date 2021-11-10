@@ -148,16 +148,16 @@ class SudokuSatSolver():
         stopTime = time.time()
         return Result(self.method, satisfiable, result, self.defaultVariables + self.customVariables, numberOfClause,
                       numberOfClauseTotal,
-                      stopTime - startTime)
+                      (stopTime - startTime) * 1000)
 
 
 class Result:
     def __init__(self, method: str, satisfiable: bool, result: [[]], numberOfVariable: int, numberOfClause: int,
-                 numberOfClauseTotal: int, timeInSecond: float):
+                 numberOfClauseTotal: int, timeInMilisecond: float):
         self.method = method
         self.satisfiable = satisfiable
         self.result = result
         self.numberOfVariable = numberOfVariable
         self.numberOfClause = numberOfClause
         self.numberOfClauseTotal = numberOfClauseTotal
-        self.timeInSecond = timeInSecond
+        self.timeInMilisecond = timeInMilisecond

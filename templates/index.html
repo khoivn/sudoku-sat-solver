@@ -2,11 +2,6 @@
 <head>
     <title>Sudoku SAT Solver</title>
     <style>
-        table {
-            border-collapse: collapse;
-            font-family: Calibri, sans-serif;
-        }
-
         colgroup, tbody {
             border: solid medium;
         }
@@ -15,15 +10,7 @@
             width: 20px;
         }
 
-        td {
-            border: solid thin;
-            height: 1.4em;
-            width: 1.4em;
-            text-align: center;
-            padding: 0;
-        }
-
-        label div {
+        .label {
             width: 200px;
             display: inline-block;
         }
@@ -46,21 +33,53 @@
         }
 
         #sudokuTable, #sudokuResultTable, #resultMetric {
+            border-collapse: collapse;
+            font-family: Calibri, sans-serif;
             margin-left: auto;
             margin-right: auto;
+        }
+
+        #sudokuTable td, #sudokuResultTable td {
+            border: solid thin;
+            height: 1.4em;
+            width: 1.4em;
+            padding: 0;
+            text-align: center;
+        }
+
+        #resultMetric td{
+            border: solid thin;
+            padding: 5px;
         }
 
     </style>
 
 </head>
 <body>
-<div style="height: 50px">
+<div style="height: 100px">
     <div class="center">
-        <label>
-            <div class="label">Grid size</div>
-            <input id="gridSize" type="number">
-        </label>
-        <button type="submit" onclick="submit()">Submit</button>
+        <table cellspacing="0" cellpadding="0" style="border: none">
+            <tr>
+                <td>
+                    <div class="label">Block size</div>
+                </td>
+                <td>
+                    <input id="blockSize" type="number" onchange="changeMatrixSize(this.value)" min="2">
+
+                </td>
+                <td>
+                    <button type="submit" onclick="submit()">Submit</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="label">Matrix size</div>
+                </td>
+                <td>
+                    <div class="label" id="matrixSize" style="display: inline-block"></div>
+                </td>
+            </tr>
+        </table>
     </div>
 </div>
 
@@ -68,7 +87,7 @@
     <table id="sudokuTable"></table>
 </div>
 
-<div style="display: none; margin-top: 30px; height: 50px" id="solveDiv">
+<div style="display: none; margin-top: 70px; height: 100px" id="solveDiv">
     <div class="center">
         <label>
             <div class="label">Encoding algorithm</div>
@@ -91,7 +110,7 @@
 
     <table id="resultMetric" style="margin-top: 50px; width: 500px">
         <tr>
-            <td>Satisfiable:</td>
+            <td style="width: 200px">Satisfiable:</td>
             <td>
                 <div id="satisfiable"></div>
             </td>
@@ -109,13 +128,13 @@
             </td>
         </tr>
         <tr>
-            <td>Clauses with clues:</td>
+            <td>Clauses with input:</td>
             <td>
                 <div id="numberOfClauseTotal"></div>
             </td>
         </tr>
         <tr>
-            <td>Execution time:</td>
+            <td>Execution time (ms):</td>
             <td>
                 <div id="executionTime"></div>
             </td>
@@ -169,7 +188,7 @@
     }
 
     function submit() {
-        blockSize = document.getElementById("gridSize").value;
+        blockSize = document.getElementById("blockSize").value;
         buildSudoku(blockSize, table);
     }
 
@@ -193,9 +212,32 @@
                 document.getElementById('numberOfVariable').innerText = `${data['numberOfVariable']}`
                 document.getElementById('numberOfClause').innerText = `${data['numberOfClause']}`
                 document.getElementById('numberOfClauseTotal').innerText = `${data['numberOfClauseTotal']}`
-                document.getElementById('executionTime').innerText = `${data['timeInSecond']}s`
+                document.getElementById('executionTime').innerText = `${data['timeInMilisecond']}`
                 document.getElementById('sudokuResult').style.display = 'block';
             })
     }
+
+    function changeMatrixSize(blockSize){
+        document.getElementById("matrixSize").innerText = `${blockSize*blockSize}x${blockSize*blockSize}`;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </script>
