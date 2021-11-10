@@ -1,4 +1,5 @@
 from flask import Flask
+from waitress import serve
 from flask import render_template
 from flask import request
 from flask import jsonify
@@ -21,4 +22,4 @@ def solve():
 
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=7777, debug=True)
+    serve(app, host="0.0.0.0", port=7777)
