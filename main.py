@@ -1,12 +1,17 @@
-from SudokuSatSolver import SudokuSatSolver
+from SudokuSatSolver import SudokuSatSolver, EncodingMode
 
 if __name__ == '__main__':
-    clues = []
-    with open("sudoku.txt", "r") as f:
-        for line in f.readlines():
-            clues.append(line.strip().split("|"))
+    BLOCK_SIZE = 3
+    FILE_NAME = "sudoku_9x9.txt"
 
-    solver = SudokuSatSolver(3, clues, SudokuSatSolver.EncodingMode.BINOMIAL)
+    clues = []
+    with open(FILE_NAME, "r") as f:
+        for line in f.readlines():
+            clue = line.strip().split("|")
+            assert len(clue) == BLOCK_SIZE * BLOCK_SIZE
+            clues.append(clue)
+
+    solver = SudokuSatSolver(BLOCK_SIZE, clues, EncodingMode.BINARY)
     result = solver.solve()
-    for row in result['result']:
+    for row in result.result:
         print(row)

@@ -1,25 +1,33 @@
 from pysat.solvers import Glucose3
 import time
+import math
+
+
+class EncodingMode:
+    BINOMIAL = 'BINOMIAL'
+    SEQUENTIAL = 'SEQUENTIAL'
+    PRODUCT = 'PRODUCT'
+    BINARY = 'BINARY'
 
 
 class SudokuSatSolver():
-    class EncodingMode:
-        BINOMIAL = 'BINOMIAL'
-        SEQUENTIAL = 'SEQUENTIAL'
-
-    def __init__(self, blockSize: int, clues: [[]], mode: str):
+    def __init__(self, blockSize: int, clues: [[]], method: str):
         self.blockSize = blockSize
         self.clues = clues
-        self.mode = mode
+        self.method = method
         self.size = blockSize * blockSize
         self.clauses = []
-        self.count = 0
-        self.variables = self.size ** 3
+        self.defaultVariables = self.size ** 3
         self.customVariables = 0
 
+    def exactOneWithBinomialEncoding(self, variables: []):
+        self.clauses.append(variables)
+        for i in range(len(variables) - 1):
+            for j in range(i + 1, len(variables)):
+                self.clauses.append([-variables[i], -variables[j]])
+
     def exactOneWithSequentialEncoding(self, variables: []):
-        indexFrom = self.variables + self.count * (self.size - 1)
-        self.count += 1
+        indexFrom = self.defaultVariables + self.customVariables
         self.customVariables += len(variables) - 1
 
         self.clauses.append(variables)
@@ -30,20 +38,51 @@ class SudokuSatSolver():
             self.clauses.append([-(indexFrom + i - 1), indexFrom + i])
             self.clauses.append([-(indexFrom + i - 1), -variables[i - 1]])
 
-    def exactOneWithBinomialEncoding(self, variables: []):
+    def exactOneWithBinaryEncoding(self, variables):
         self.clauses.append(variables)
-        for i in range(len(variables) - 1):
-            for j in range(i + 1, len(variables)):
-                self.clauses.append([-variables[i], -variables[j]])
+        binarySize = math.ceil(math.log2(len(variables)))
+        for i, variable in enumerate(variables):
+            for j, sign in enumerate(self.toSignList(i, binarySize)):
+                self.clauses.append([-variable, - sign * (self.defaultVariables + self.customVariables + j + 1)])
+        self.customVariables += binarySize
+
+    def exactOneWithProductEncoding(self, variables: []):
+        self.clauses.append(variables)
+        p = math.ceil(math.sqrt(len(variables)))
+        q = math.ceil(len(variables) / p)
+
+        fromIndex = self.defaultVariables + self.customVariables
+        self.customVariables += p + q
+
+        for i in range(1, p + 1):
+            for j in range(i + 1, p + 1):
+                self.clauses.append([-(fromIndex + i), -(fromIndex + j)])
+
+        for i in range(1, q + 1):
+            for j in range(i + 1, q + 1):
+                self.clauses.append([-(fromIndex + p + i), -(fromIndex + p + j)])
+
+        for i, var in enumerate(variables):
+            r = int(i / q) + 1
+            c = i % q + 1
+            self.clauses.append([-var, fromIndex + r])
+            self.clauses.append([-var, fromIndex + p + c])
 
     def exactOneConstraint(self, variables: []):
-        if self.mode == self.EncodingMode.SEQUENTIAL:
+        if self.method == EncodingMode.SEQUENTIAL:
             self.exactOneWithSequentialEncoding(variables)
+        elif self.method == EncodingMode.PRODUCT:
+            self.exactOneWithSequentialEncoding(variables)
+        elif self.method == EncodingMode.BINARY:
+            self.exactOneWithBinaryEncoding(variables)
         else:
             self.exactOneWithBinomialEncoding(variables)
 
     def convert(self, i: int, j: int, k: int):
         return (i - 1) * self.size * self.size + (j - 1) * self.size + k
+
+    def toSignList(self, a: int, size: int):
+        return [1 if int(i) == 1 else -1 for i in list(bin(a).replace("0b", "").zfill(size))]
 
     def addClausesWithCellConstraint(self):
         for i in range(1, self.size + 1):
@@ -65,10 +104,11 @@ class SudokuSatSolver():
 
     def addClausesWithBlockConstraint(self):
         for k in range(1, self.size + 1):
-            for ii in range(1, 4):
-                for jj in range(1, 4):
-                    variables = [self.convert(i, j, k) for i in range(ii * 3 - 2, ii * 3 + 1) for j in
-                                 range(jj * 3 - 2, jj * 3 + 1)]
+            for ii in range(1, self.blockSize + 1):
+                for jj in range(1, self.blockSize + 1):
+                    variables = [self.convert(i, j, k) for i in
+                                 range((ii - 1) * self.blockSize + 1, ii * self.blockSize + 1) for j in
+                                 range((jj - 1) * self.blockSize + 1, jj * self.blockSize + 1)]
                     self.exactOneConstraint(variables)
 
     def addClausesWithClues(self):
@@ -87,7 +127,7 @@ class SudokuSatSolver():
         if not satisfiable:
             return None, satisfiable
 
-        result = g.get_model()[:self.variables]
+        result = g.get_model()[:self.defaultVariables]
         result = [next(k + 1 for k, l in enumerate(result[i:i + self.size]) if l > 0) for i in
                   range(0, len(result), self.size)]
         result = [result[i:i + self.size] for i in range(0, len(result), self.size)]
@@ -106,10 +146,18 @@ class SudokuSatSolver():
 
         result, satisfiable = self.satSolving()
         stopTime = time.time()
-        return {
-            'satisfiable': satisfiable,
-            'result': result,
-            'numberOfVariable': self.variables + self.customVariables,
-            'numberOfClause': numberOfClause,
-            'numberOfClauseTotal': numberOfClauseTotal,
-            'timeInSecond': stopTime - startTime}
+        return Result(self.method, satisfiable, result, self.defaultVariables + self.customVariables, numberOfClause,
+                      numberOfClauseTotal,
+                      stopTime - startTime)
+
+
+class Result:
+    def __init__(self, method: str, satisfiable: bool, result: [[]], numberOfVariable: int, numberOfClause: int,
+                 numberOfClauseTotal: int, timeInSecond: float):
+        self.method = method
+        self.satisfiable = satisfiable
+        self.result = result
+        self.numberOfVariable = numberOfVariable
+        self.numberOfClause = numberOfClause
+        self.numberOfClauseTotal = numberOfClauseTotal
+        self.timeInSecond = timeInSecond
