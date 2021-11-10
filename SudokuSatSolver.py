@@ -6,8 +6,9 @@ import math
 class EncodingMode:
     BINOMIAL = 'BINOMIAL'
     SEQUENTIAL = 'SEQUENTIAL'
-    PRODUCT = 'PRODUCT'
     BINARY = 'BINARY'
+    COMMANDER = 'COMMANDER'
+    PRODUCT = 'PRODUCT'
 
 
 class SudokuSatSolver():
@@ -20,11 +21,14 @@ class SudokuSatSolver():
         self.defaultVariables = self.size ** 3
         self.customVariables = 0
 
-    def exactOneWithBinomialEncoding(self, variables: []):
-        self.clauses.append(variables)
+    def exactOneWithBinomialEncoding(self, variables: [], append=True):
+        newClauses = [variables]
         for i in range(len(variables) - 1):
             for j in range(i + 1, len(variables)):
-                self.clauses.append([-variables[i], -variables[j]])
+                newClauses.append([-variables[i], -variables[j]])
+        if append:
+            self.clauses.extend(newClauses)
+        return newClauses
 
     def exactOneWithSequentialEncoding(self, variables: []):
         indexFrom = self.defaultVariables + self.customVariables
@@ -46,6 +50,22 @@ class SudokuSatSolver():
                 self.clauses.append([-variable, - sign * (self.defaultVariables + self.customVariables + j + 1)])
         self.customVariables += binarySize
 
+    def exactOneWithCommanderEncoding(self, variables: []):
+        p = math.ceil(math.sqrt(len(variables)))
+        q = math.ceil(len(variables) / p)
+        fromIndex = self.defaultVariables + self.customVariables
+        self.customVariables += q
+
+        newVariables = [fromIndex + i for i in range(1, q + 1)]
+        groups = [variables[i:i + p] for i in range(0, len(variables), p)]
+
+        self.exactOneWithBinomialEncoding(newVariables)
+        for i, group in enumerate(groups):
+            newVariable = fromIndex + i + 1
+            self.clauses += [[-newVariable] + c for c in self.exactOneWithBinomialEncoding(group, False)]
+            for x in group:
+                self.clauses.append([newVariable, -x])
+
     def exactOneWithProductEncoding(self, variables: []):
         self.clauses.append(variables)
         p = math.ceil(math.sqrt(len(variables)))
@@ -54,11 +74,11 @@ class SudokuSatSolver():
         fromIndex = self.defaultVariables + self.customVariables
         self.customVariables += p + q
 
-        for i in range(1, p + 1):
+        for i in range(1, p):
             for j in range(i + 1, p + 1):
                 self.clauses.append([-(fromIndex + i), -(fromIndex + j)])
 
-        for i in range(1, q + 1):
+        for i in range(1, q):
             for j in range(i + 1, q + 1):
                 self.clauses.append([-(fromIndex + p + i), -(fromIndex + p + j)])
 
