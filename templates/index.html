@@ -52,6 +52,9 @@
             padding: 5px;
         }
 
+
+
+
     </style>
 
 </head>
@@ -111,7 +114,13 @@
 
     <table id="resultMetric" style="margin-top: 50px; width: 500px">
         <tr>
-            <td style="width: 200px">Satisfiable:</td>
+            <td style="width: 200px">Method:</td>
+            <td>
+                <div id="method"></div>
+            </td>
+        </tr>
+        <tr>
+            <td>Satisfiable:</td>
             <td>
                 <div id="satisfiable"></div>
             </td>
@@ -209,6 +218,7 @@
         ).then(response => response.json())
             .then(data => {
                 buildSudoku(blockSize, tableResult, data['result']);
+                document.getElementById('method').innerText = `${data['method']}`
                 document.getElementById('satisfiable').innerText = `${data['satisfiable']}`
                 document.getElementById('numberOfVariable').innerText = `${data['numberOfVariable']}`
                 document.getElementById('numberOfClause').innerText = `${data['numberOfClause']}`
@@ -221,6 +231,9 @@
     function changeMatrixSize(blockSize){
         document.getElementById("matrixSize").innerText = `${blockSize*blockSize}x${blockSize*blockSize}`;
     }
+
+
+
 
 
 

@@ -91,10 +91,12 @@ class SudokuSatSolver():
     def exactOneConstraint(self, variables: []):
         if self.method == EncodingMode.SEQUENTIAL:
             self.exactOneWithSequentialEncoding(variables)
-        elif self.method == EncodingMode.PRODUCT:
-            self.exactOneWithSequentialEncoding(variables)
         elif self.method == EncodingMode.BINARY:
             self.exactOneWithBinaryEncoding(variables)
+        elif self.method == EncodingMode.COMMANDER:
+            self.exactOneWithCommanderEncoding(variables)
+        elif self.method == EncodingMode.PRODUCT:
+            self.exactOneWithSequentialEncoding(variables)
         else:
             self.exactOneWithBinomialEncoding(variables)
 
