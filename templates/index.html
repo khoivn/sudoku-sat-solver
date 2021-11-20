@@ -165,8 +165,7 @@
     var blockSize;
     var rows = [];
 
-    function buildSudoku(blockSize, target, data) {
-        withData = !!data;
+    function buildSudoku(blockSize, target, withData, data) {
         if (!withData) rows = [];
         target.innerHTML = '';
         for (let i = 0; i < blockSize; i++) {
@@ -187,7 +186,7 @@
                     const td = document.createElement('td');
                     const input = document.createElement('input')
                     input.className = "cell";
-                    if (withData) input.value = data[i * blockSize + ii][j]
+                    if (withData && data) input.value = data[i * blockSize + ii][j]
                     tr.appendChild(td);
                     td.appendChild(input);
                     row.push(input)
@@ -200,7 +199,7 @@
 
     function submit() {
         blockSize = document.getElementById("blockSize").value;
-        buildSudoku(blockSize, table);
+        buildSudoku(blockSize, table, false);
     }
 
     function solve() {
@@ -218,7 +217,7 @@
             }
         ).then(response => response.json())
             .then(data => {
-                buildSudoku(blockSize, tableResult, data['result']);
+                buildSudoku(blockSize, tableResult, true, data['result']);
                 document.getElementById('method').innerText = `${data['method']}`
                 document.getElementById('satisfiable').innerText = `${data['satisfiable']}`
                 document.getElementById('numberOfVariable').innerText = `${data['numberOfVariable']}`
@@ -232,28 +231,4 @@
     function changeMatrixSize(blockSize){
         document.getElementById("matrixSize").innerText = `${blockSize*blockSize}x${blockSize*blockSize}`;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
