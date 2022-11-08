@@ -96,7 +96,7 @@ class SudokuSatSolver():
         elif self.method == EncodingMode.COMMANDER:
             self.exactOneWithCommanderEncoding(variables)
         elif self.method == EncodingMode.PRODUCT:
-            self.exactOneWithSequentialEncoding(variables)
+            self.exactOneWithProductEncoding(variables)
         else:
             self.exactOneWithBinomialEncoding(variables)
 
